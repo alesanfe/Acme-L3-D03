@@ -55,7 +55,7 @@ master.menu.consumer.favourite-link = Favourite link
 
 # master.menu.lecturer ##########################################################
 
-master.menu.Lecturer = Lecturer
+master.menu.lecturer = Lecturer
 master.menu.lecturer.favourite-link = Favourite link
 
 # master.menu.user-account ####################################################
