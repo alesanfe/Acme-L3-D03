@@ -10,17 +10,14 @@
  * they accept any liabilities with respect to them.
  */
 
-package acme.features.authenticated.auditingRecord;
-
-import java.time.Duration;
-import java.util.Collection;
+package acme.features.auditor.auditingRecord;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import acme.entities.audit.Audit;
 import acme.entities.audit.AuditingRecord;
 import acme.framework.components.accounts.Authenticated;
+import acme.framework.components.accounts.Principal;
 import acme.framework.components.models.Tuple;
 import acme.framework.controllers.HttpMethod;
 import acme.framework.helpers.BinderHelper;
@@ -29,12 +26,12 @@ import acme.framework.services.AbstractService;
 import acme.roles.Auditor;
 
 @Service
-public class AuthenticatedAuditingRecordListService extends AbstractService<Authenticated, AuditingRecord> {
+public class AuthenticatedAuditingRecordUpdateService extends AbstractService<Authenticated, AuditingRecord> {
 
 	//Constants
 
 	public final static String[]					PROPERTIES	= {
-		"subject", "assessment", "startAudit", "endAudit", "mark", "link", "special"
+		"subject", "assessment", "startAudit", "mark", "endAudit", "link", "special"
 	};
 
 	// Internal state ---------------------------------------------------------
@@ -48,10 +45,18 @@ public class AuthenticatedAuditingRecordListService extends AbstractService<Auth
 	@Override
 	public void authorise() {
 		boolean status;
+		int userAccountId;
+		int auditingRecordId;
+		AuditingRecord auditingRecord;
+		Boolean isMine;
 
+		userAccountId = super.getRequest().getPrincipal().getAccountId();
 		status = super.getRequest().getPrincipal().hasRole(Auditor.class);
+		auditingRecordId = super.getRequest().getData("id", int.class);
+		auditingRecord = this.repository.findOneAuditingRecordById(auditingRecordId);
+		isMine = userAccountId == auditingRecord.getAudit().getAuditor().getUserAccount().getId();
 
-		super.getResponse().setAuthorised(status);
+		super.getResponse().setAuthorised(status && isMine);
 	}
 
 	@Override
@@ -63,13 +68,11 @@ public class AuthenticatedAuditingRecordListService extends AbstractService<Auth
 
 	@Override
 	public void load() {
-		Collection<AuditingRecord> object;
+		AuditingRecord object;
 		int auditId;
 
 		auditId = super.getRequest().getData("id", int.class);
-
-		object = this.repository.findAuditingRecordsByAuditId(auditId);
-		System.out.println(object.size());
+		object = this.repository.findOneAuditingRecordById(auditId);
 
 		super.getBuffer().setData(object);
 	}
@@ -78,12 +81,14 @@ public class AuthenticatedAuditingRecordListService extends AbstractService<Auth
 	public void bind(final AuditingRecord object) {
 		assert object != null;
 
-		super.bind(object, AuthenticatedAuditingRecordListService.PROPERTIES);
+		super.bind(object, AuthenticatedAuditingRecordUpdateService.PROPERTIES);
 	}
 
 	@Override
 	public void validate(final AuditingRecord object) {
 		assert object != null;
+		if (!object.getAudit().getDraftMode())
+			super.state(false, "draftMode", "audit.error.edit-draftMode");
 	}
 
 	@Override
@@ -96,34 +101,17 @@ public class AuthenticatedAuditingRecordListService extends AbstractService<Auth
 	@Override
 	public void unbind(final AuditingRecord object) {
 		assert object != null;
+		Principal principal;
+		int userAccountId;
+
+		principal = super.getRequest().getPrincipal();
+		userAccountId = principal.getAccountId();
+
 		Tuple tuple;
-		Duration duration;
-
-		duration = object.getDuration();
-
-		tuple = BinderHelper.unbind(object, AuthenticatedAuditingRecordListService.PROPERTIES);
-		tuple.put("mark", object.getMark().getMark());
-		tuple.put("duration", String.format("%d H %d m", duration.toHours(), duration.toMinutes() % 60));
-
+		final int idAuditor = object.getAudit().getAuditor().getUserAccount().getId();
+		tuple = BinderHelper.unbind(object, AuthenticatedAuditingRecordUpdateService.PROPERTIES);
+		tuple.put("myAudit", userAccountId == idAuditor);
 		super.getResponse().setData(tuple);
-	}
-
-	@Override
-	public void unbind(final Collection<AuditingRecord> objects) {
-		assert objects != null;
-		final int auditId;
-		Audit audit;
-		int userId;
-		int auditUserId;
-
-		auditId = super.getRequest().getData("id", int.class);
-		audit = this.repository.findOneAuditByAuditId(auditId);
-		userId = super.getRequest().getPrincipal().getAccountId();
-		auditUserId = audit.getAuditor().getUserAccount().getId();
-		super.getResponse().setGlobal("auditDraftMode", audit.getDraftMode());
-		super.getResponse().setGlobal("auditId", auditId);
-		super.getResponse().setGlobal("myAudit", userId == auditUserId);
-		super.unbind(objects);
 	}
 
 	@Override

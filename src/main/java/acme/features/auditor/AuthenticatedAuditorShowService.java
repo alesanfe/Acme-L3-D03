@@ -10,7 +10,7 @@
  * they accept any liabilities with respect to them.
  */
 
-package acme.features.authenticated.auditor;
+package acme.features.auditor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ import acme.framework.services.AbstractService;
 import acme.roles.Auditor;
 
 @Service
-public class AuthenticatedAuditorUpdateService extends AbstractService<Authenticated, Auditor> {
+public class AuthenticatedAuditorShowService extends AbstractService<Authenticated, Auditor> {
 
 	//Constants
 
@@ -68,7 +68,7 @@ public class AuthenticatedAuditorUpdateService extends AbstractService<Authentic
 	public void bind(final Auditor object) {
 		assert object != null;
 
-		super.bind(object, AuthenticatedAuditorUpdateService.PROPERTIES);
+		super.bind(object, AuthenticatedAuditorShowService.PROPERTIES);
 	}
 
 	@Override
@@ -89,7 +89,7 @@ public class AuthenticatedAuditorUpdateService extends AbstractService<Authentic
 
 		Tuple tuple;
 
-		tuple = BinderHelper.unbind(object, AuthenticatedAuditorUpdateService.PROPERTIES);
+		tuple = BinderHelper.unbind(object, AuthenticatedAuditorShowService.PROPERTIES);
 		super.getResponse().setData(tuple);
 	}
 
