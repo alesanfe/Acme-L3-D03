@@ -30,7 +30,7 @@ public class Lecturer extends AbstractRole {
 
 	@NotBlank
 	@Length(max = 100)
-	protected String			qualificationsList;
+	protected String			qualifications;
 
 	@URL
 	protected String			link;

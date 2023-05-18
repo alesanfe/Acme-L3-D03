@@ -47,6 +47,9 @@ master.menu.consumer.favourite-link = Enlace favorito
 
 master.menu.lecturer = Profesor
 master.menu.lecturer.favourite-link = Enlace favorito
+master.menu.lecturer.course.list-all = Listar los cursos
+master.menu.lecturer.course.list-mine = Listar todos mis cursos
+master.menu.lecturer.course.create = Create new course
 
 # master.menu.user-account ####################################################
 
